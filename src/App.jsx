@@ -380,9 +380,30 @@ Verdict logic: REJECTED if ANY field is FAIL or MISSING. APPROVED only if all re
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
+    const MAX_PX = 1024;
+    const QUALITY = 0.82;
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const { width, height } = img;
+        let w = width;
+        let h = height;
+        if (w > MAX_PX || h > MAX_PX) {
+          if (w > h) { h = Math.round((h / w) * MAX_PX); w = MAX_PX; }
+          else { w = Math.round((w / h) * MAX_PX); h = MAX_PX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", QUALITY);
+        resolve(dataUrl.split(",")[1]);
+      };
+      img.src = e.target.result;
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -469,7 +490,7 @@ function SingleMode() {
     const start = Date.now();
     try {
       const b64 = await fileToBase64(file);
-      const res = await analyzeLabel(b64, file.type, file.name);
+      const res = await analyzeLabel(b64, "image/jpeg", file.name);
       setElapsed(((Date.now() - start) / 1000).toFixed(1));
       setResult(res);
     } catch (err) {
@@ -576,7 +597,7 @@ function BatchMode() {
       setCurrent(file.name);
       try {
         const b64 = await fileToBase64(file);
-        const res = await analyzeLabel(b64, file.type, file.name);
+        const res = await analyzeLabel(b64, "image/jpeg", file.name);
         setResults((prev) => ({ ...prev, [file.name]: { status: "done", data: res } }));
       } catch (err) {
         setResults((prev) => ({ ...prev, [file.name]: { status: "error", error: err.message } }));
