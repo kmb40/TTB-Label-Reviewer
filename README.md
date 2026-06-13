@@ -48,6 +48,15 @@ Upload an alcohol beverage label image. The app uses Claude's vision API to extr
 
 ---
 
+## Label Submission Guidelines
+TTB-required fields are typically distributed across both the front and back label surfaces. Brand name, class/type designation, and alcohol content are commonly found on the front label. The government warning statement, net contents, and bottler information are commonly found on the back label.
+
+This prototype analyzes whatever label surface is uploaded. For a complete compliance review, upload each label surface as a separate image. Batch mode supports this workflow, upload front and back labels together and review results for each.
+
+Multi-surface review within a single upload is a known limitation of the current version and a candidate for a future enhancement.
+
+---
+
 ## Architecture Decisions
 
 **Structured JSON output from the model**
