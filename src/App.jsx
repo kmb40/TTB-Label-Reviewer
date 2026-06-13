@@ -349,7 +349,7 @@ Verdict logic: REJECTED if ANY field is FAIL or MISSING. APPROVED only if all re
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5",
       max_tokens: 1000,
       system: systemPrompt,
       messages: [

@@ -42,7 +42,7 @@ Upload an alcohol beverage label image. The app uses Claude's vision API to extr
 | Layer | Choice |
 |---|---|
 | Frontend | React (JSX) |
-| AI / Vision | Claude Sonnet (`claude-sonnet-4-6`) via Anthropic API |
+| AI / Vision | Claude Sonnet (`claude-haiku-4-5`) via Anthropic API <br>Note: Can be changed but may impact results delivery time.|
 | Proxy Server | Express |
 | Fonts | IBM Plex Sans + IBM Plex Mono |
 | Deployment | Vercel |
@@ -157,7 +157,7 @@ Connect your GitHub repo in the Vercel dashboard and set `ANTHROPIC_API_KEY` as 
  
 - React + Vite
 - Express (API proxy)
-- Anthropic Messages API (`claude-sonnet-4-6`)
+- Anthropic Messages API (`claude-haiku-4-5`)
 - Vercel (deployment)
 - IBM Plex font family (Google Fonts)
  
