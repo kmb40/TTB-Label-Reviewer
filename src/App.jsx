@@ -373,7 +373,7 @@ Verdict logic: REJECTED if ANY field is FAIL or MISSING. APPROVED only if all re
   const data = await response.json();
   if (!response.ok) throw new Error(data.error?.message || "API error");
 
-  console.log("Token usage:", data.usage);
+  //console.log("Token usage:", data.usage); //used to track realtime token usage and costs during development
   const text = data.content[0]?.text || "";
   const clean = text.replace(/```json|```/g, "").trim();
   return JSON.parse(clean);
@@ -492,7 +492,10 @@ function SingleMode() {
     try {
       const b64 = await fileToBase64(file);
       const res = await analyzeLabel(b64, "image/jpeg", file.name);
-      setElapsed(((Date.now() - start) / 1000).toFixed(1));
+      // setElapsed(((Date.now() - start) / 1000).toFixed(1));
+      const seconds = ((Date.now() - start) / 1000).toFixed(1);
+      setElapsed(seconds);
+      if (parseFloat(seconds) > 5) setError("Analysis took longer than 5 seconds. Try a clearer or smaller image for faster results.");
       setResult(res);
     } catch (err) {
       setError(err.message);
