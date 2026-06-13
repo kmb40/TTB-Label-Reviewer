@@ -350,7 +350,7 @@ Verdict logic: REJECTED if ANY field is FAIL or MISSING. APPROVED only if all re
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "claude-haiku-4-5",
-      max_tokens: 1000,
+      max_tokens: 700,
       system: systemPrompt,
       messages: [
         {
@@ -373,6 +373,7 @@ Verdict logic: REJECTED if ANY field is FAIL or MISSING. APPROVED only if all re
   const data = await response.json();
   if (!response.ok) throw new Error(data.error?.message || "API error");
 
+  console.log("Token usage:", data.usage);
   const text = data.content[0]?.text || "";
   const clean = text.replace(/```json|```/g, "").trim();
   return JSON.parse(clean);
