@@ -345,7 +345,7 @@ Government Warning compliance rules (STRICT):
 
 Verdict logic: REJECTED if ANY field is FAIL or MISSING. APPROVED only if all required fields PASS (N/A is acceptable for optional fields).`;
 
-  const response = await fetch("http://localhost:3001/api/analyze", {
+  const response = await fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
