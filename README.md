@@ -140,10 +140,12 @@ Connect your GitHub repo in the Vercel dashboard and set `ANTHROPIC_API_KEY` as 
  
 ```
 /
+├── api/
+│   └── analyze.js       # Vercel serverless function for Anthropic API calls
 ├── src/
 │   └── App.jsx          # Full application — single-file React component
 ├── public/
-├── server.js            # Express proxy server for Anthropic API calls
+├── server.js            # Express proxy server for local development
 ├── index.html
 ├── vite.config.js
 ├── package.json
