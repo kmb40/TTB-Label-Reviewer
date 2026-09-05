@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { citationFor } from "./citations";
 
 const COLORS = {
   bg: "#F8F7F4",
@@ -190,6 +191,19 @@ const styles = {
     marginTop: "4px",
     lineHeight: "1.5",
   },
+  fieldCitation: {
+    gridColumn: "2 / 4",
+    fontSize: "10.5px",
+    fontFamily: "'IBM Plex Mono', monospace",
+    color: COLORS.amber,
+    marginTop: "4px",
+  },
+  beverageTypeBadge: {
+    fontSize: "10.5px",
+    fontFamily: "'IBM Plex Mono', monospace",
+    color: COLORS.muted,
+    letterSpacing: "0.04em",
+  },
   summaryRow: {
     padding: "16px 20px",
     backgroundColor: "#F8F7F4",
@@ -314,8 +328,9 @@ You MUST respond with ONLY valid JSON, no markdown, no explanation, just the JSO
 Required JSON structure:
 {
   "extracted": {
+    "beverageType": "WINE|DISTILLED_SPIRITS|MALT_BEVERAGE|UNKNOWN",
     "brandName": "extracted value or null",
-    "classType": "extracted value or null", 
+    "classType": "extracted value or null",
     "alcoholContent": "extracted value or null",
     "netContents": "extracted value or null",
     "bottlerInfo": "extracted value or null",
@@ -336,6 +351,14 @@ Required JSON structure:
   "imageQuality": "GOOD|POOR",
   "imageQualityNote": "note if image quality affected analysis or null"
 }
+
+Determining beverageType: read it from the class/type designation on the label.
+Wine varietals, appellations, and "table wine" style designations = WINE.
+Whiskey, vodka, gin, rum, brandy, tequila, and liqueurs = DISTILLED_SPIRITS.
+Beer, ale, lager, stout, and malt liquor = MALT_BEVERAGE.
+Use UNKNOWN only if the class/type is missing or genuinely ambiguous — this
+selects which part of 27 CFR the compliance citations are drawn from, so
+don't guess past what the label actually shows.
 
 Government Warning compliance rules (STRICT):
 - Must begin with "GOVERNMENT WARNING:" in ALL CAPS and bold
@@ -376,7 +399,21 @@ Verdict logic: REJECTED if ANY field is FAIL or MISSING. APPROVED only if all re
   //console.log("Token usage:", data.usage); //used to track realtime token usage and costs during development
   const text = data.content[0]?.text || "";
   const clean = text.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return attachCitations(JSON.parse(clean));
+}
+
+// Citations are looked up from a verified table (see citations.js), not asked
+// of the model — a hallucinated CFR section number is worse than none.
+function attachCitations(result) {
+  const beverageType = result?.extracted?.beverageType || "UNKNOWN";
+  const compliance = result?.compliance || {};
+  const withCitations = Object.fromEntries(
+    Object.entries(compliance).map(([field, entry]) => [
+      field,
+      { ...entry, citation: citationFor(beverageType, field) },
+    ])
+  );
+  return { ...result, compliance: withCitations };
 }
 
 function fileToBase64(file) {
@@ -419,14 +456,25 @@ const FIELD_LABELS = {
   governmentWarning: "Gov't Warning",
 };
 
+const BEVERAGE_TYPE_LABELS = {
+  WINE: "Wine · 27 CFR Part 4",
+  DISTILLED_SPIRITS: "Distilled Spirits · 27 CFR Part 5",
+  MALT_BEVERAGE: "Malt Beverage · 27 CFR Part 7",
+  UNKNOWN: "Beverage type not determined",
+};
+
 function ResultsPanel({ result, filename }) {
   if (!result) return null;
   const fields = Object.keys(FIELD_LABELS);
+  const beverageType = result.extracted?.beverageType || "UNKNOWN";
 
   return (
     <div style={styles.resultsCard}>
       <div style={styles.resultsHeader}>
-        <p style={styles.resultsTitle}>Compliance Review — {filename}</p>
+        <div>
+          <p style={styles.resultsTitle}>Compliance Review — {filename}</p>
+          <span style={styles.beverageTypeBadge}>{BEVERAGE_TYPE_LABELS[beverageType]}</span>
+        </div>
         <OverallBadge verdict={result.verdict} />
       </div>
 
@@ -445,6 +493,7 @@ function ResultsPanel({ result, filename }) {
             <span style={styles.fieldValue}>
               {val || <span style={{ color: COLORS.muted, fontStyle: "italic" }}>Not found</span>}
               {comp?.note && <div style={styles.fieldNote}>{comp.note}</div>}
+              {comp?.citation && <div style={styles.fieldCitation}>§ {comp.citation}</div>}
             </span>
             <div style={{ textAlign: "right" }}>
               <StatusBadge status={comp?.status || "N/A"} />
